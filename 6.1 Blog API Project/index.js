@@ -1,7 +1,21 @@
 import express from "express";
 import bodyParser from "body-parser";
+import pgPromise from "pg-promise";
+
+require("dotenv").config();
+
+// set up db connection
+const pgp = pgPromise();
+const db = pgp({
+  host: "localhost",
+  port: 5432,
+  database: "postgres",
+  password: process.env.PGPASSWORD, 
+
+}); 
 
 const app = express();
+app.use(bodyParser.json());
 const port = 4004;
 
 // In-memory data store
