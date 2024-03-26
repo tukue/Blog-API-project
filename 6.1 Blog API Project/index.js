@@ -1,8 +1,9 @@
 import express from "express";
 import bodyParser from "body-parser";
 import pgPromise from "pg-promise";
+import { config } from 'dotenv';
 
-require("dotenv").config();
+config();
 
 // set up db connection
 const pgp = pgPromise();
@@ -16,8 +17,20 @@ const db = pgp({
 
 const app = express();
 app.use(bodyParser.json());
-const port = 4004;
-
+const port = 4005;
+// CHALLENGE 6: Add posts to the database
+app.post("/addpost", async (req, res) => {
+  try {
+    const { title, content, author, date } = req.body;
+    const query = "INSERT INTO posts (title, content, author, date) VALUES ($1, $2, $3, $4) RETURNING *";
+    const values = [title, content, author, date];
+    const result = await db.one(query, values);
+    res.json(result);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Failed to add post to the database" });
+  }
+});
 // In-memory data store
 let posts = [
   {
