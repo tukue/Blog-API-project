@@ -2,18 +2,46 @@ import express from "express";
 import bodyParser from "body-parser";
 import pgPromise from "pg-promise";
 import { config } from 'dotenv';
-
+import pg from 'pg';  
+const { Pool } = pg;
 config();
 
 // set up db connection
 const pgp = pgPromise();
-const db = pgp({
+const pool = new Pool({
   host: "localhost",
   port: 5432,
   database: "postgres",
-  password: process.env.PGPASSWORD, 
+  password: process.env.DB_PASSWORD, 
 
 }); 
+pool.connect()
+  .then(client => {
+// Create table in the Postgres database
+const createTableQuery=`
+  CREATE TABLE IF NOT EXISTS blog_posts (
+    id SERIAL PRIMARY KEY,
+    title VARCHAR(255) NOT NULL,
+    content TEXT NOT NULL,
+    author VARCHAR(255) NOT NULL,
+    date TIMESTAMP NOT NULL
+  )
+`;
+
+// Execute the create table query
+return client.query(createTableQuery)
+  .then(() => {
+    console.log('Table "blog_posts" created successfully');
+    // You can perform further operations here if needed
+    client.release; // 
+  })
+  .catch((error) => {
+    console.error('Error creating table:', error);
+    client.release; // 
+  });
+  }).catch((error) => {
+    console.error('Error connecting to the database:', error);
+  });
 
 const app = express();
 app.use(bodyParser.json());
